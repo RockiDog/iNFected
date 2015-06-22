@@ -1,0 +1,11 @@
+{
+  "name ": "iNFected",
+  "version ": "0.0.1",
+  "description" : "iNFected is a web game based on the geometry information",
+  "private" : true,
+  "dependencies": {
+    "socket.io" : "~0.9.6",
+    "mime" : "~1.2.7",
+    "mongojs" : "~1.0.0"
+  }
+}

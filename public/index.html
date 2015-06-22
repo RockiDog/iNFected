@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv='Content-Type' content='text/html; charset=utf-8'></meta>
+  <meta name='viewport' content='initial-scale=1.0, user-scalable=no'></meta>
+  <title>iNFected感染</title>
+
+  <style type='text/css'>
+    body, html, #i-map {width: 100%; height: 100%; overflow: hidden; margin: 0;}
+    #signin-container {top: 30px; left: 0; right: 0; bottom: 0; position: absolute; z-index: 999;}
+  </style>
+  <link href='/stylesheets/signin.css' rel='stylesheet'></link>
+  <script src='/javascripts/client.js'></script>
+  <script src='/javascripts/jquery.md5.js'></script>
+  <script src='/socket.io/socket.io.js'></script>
+
+  <link href='http://apps.bdimg.com/libs/bootstrap/3.3.0/css/bootstrap.min.css' rel='stylesheet'></link>
+  <script src='http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js'></script>
+  <script src='http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js'></script>
+  <script src='http://api.map.baidu.com/api?type=quick&ak=Lfs5mwH9v92NhZt83gHAzAwR&v=1.0'></script>
+  <script src='http://code.jquery.com/jquery-1.8.0.min.js'></script>
+</head>
+
+<body>
+  <div id='i-map'></div>
+  <div class='container' id='signin-container'>
+    <form class='form-signin'>
+      <h3 class='form-signin-heading'>iNFected帐号</h3>
+      <label for='input_uname' class='sr-only'>用户名称</label>
+      <input type='text' id='input-uname' class='form-control' placeholder='用户名称' required autofocus>
+      <label for='input_passwd' class='sr-only'>登录密码</label>
+      <input type='password' id='input-passwd' class='form-control' placeholder='登录密码' required>
+      <div class='checkbox'>
+        <label>
+          <input type='checkbox' value='remember-me'>下次自动登录
+        </label>
+      </div>
+      <button class='btn btn-lg btn-primary btn-block' type='submit'>直接登录</button>
+    </form>
+  </div>
+</body>
+</html>
+
+<script>
+  var longitude = null, latitude = null
+  var map = new BMap.Map('i-map')
+  map.disableDragging()
+  map.centerAndZoom(new BMap.Point(120.128258, 30.265389), 17)
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      longitude = position.coords.longitude
+      latitude  = position.coords.latitude
+      var pos = new BMap.Point(longitude, latitude)
+      map.centerAndZoom(pos, 17)
+      var marker = new BMap.Marker(pos)
+      map.addOverlay(marker)
+    })
+  } else {
+    console.log('Failed to get location')
+  }
+
+  $(document).ready(function() {
+    $('.form-signin').submit(function(event) {
+      event.preventDefault()
+      var uname  = $('#input-uname').val()
+      var passwd = $('#input-passwd').val()
+      var hashedPasswd = md5(passwd)
+      console.log(uname + ' ' + passwd)
+      $.post('/signin', {uname : uname, passwd : hashedPasswd}, function(response) {
+        switch (response.ack) {
+          case (0):
+          case (-1):
+          case (-2):
+            break;
+          case (1):
+          case (2):
+            $('#signin-container').remove()
+            map.enableDragging();
+            break;
+        }
+        console.log(response)
+      })
+    })
+  })
+</script>
