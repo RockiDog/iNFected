@@ -5,20 +5,21 @@
   <meta name='viewport' content='initial-scale=1.0, user-scalable=no'></meta>
   <title>iNFected感染</title>
 
+
   <style type='text/css'>
     body, html, #i-map {width: 100%; height: 100%; overflow: hidden; margin: 0;}
     #signin-container {top: 30px; left: 0; right: 0; bottom: 0; position: absolute; z-index: 999;}
   </style>
   <link href='/stylesheets/signin.css' rel='stylesheet'></link>
+  <link href='http://apps.bdimg.com/libs/bootstrap/3.3.0/css/bootstrap.min.css' rel='stylesheet'></link>
+
   <script src='/javascripts/client.js'></script>
   <script src='/javascripts/jquery.md5.js'></script>
   <script src='/socket.io/socket.io.js'></script>
 
-  <link href='http://apps.bdimg.com/libs/bootstrap/3.3.0/css/bootstrap.min.css' rel='stylesheet'></link>
   <script src='http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js'></script>
   <script src='http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js'></script>
-  <script src='http://api.map.baidu.com/api?type=quick&ak=Lfs5mwH9v92NhZt83gHAzAwR&v=1.0'></script>
-  <script src='http://code.jquery.com/jquery-1.8.0.min.js'></script>
+  <script src='http://api.map.baidu.com/api?v=1.5&ak=Lfs5mwH9v92NhZt83gHAzAwR'></script>
 </head>
 
 <body>
@@ -32,7 +33,7 @@
       <input type='password' id='input-passwd' class='form-control' placeholder='登录密码' required>
       <div class='checkbox'>
         <label>
-          <input type='checkbox' value='remember-me'>下次自动登录
+          <input type='checkbox' value='remember-me'>下次自动登录</input>
         </label>
       </div>
       <button class='btn btn-lg btn-primary btn-block' type='submit'>直接登录</button>
@@ -42,18 +43,42 @@
 </html>
 
 <script>
-  var longitude = null, latitude = null
   var map = new BMap.Map('i-map')
+  var root
+  var myspores    = []
+  var otherspores = []
+
+  var centroidOpt = {
+    strokeColor   : 'green',
+    fillColor     : 'green',
+    strokeWeight  : 1,
+    strokeOpacity : 1,
+    fillOpacity	  : 1,
+    strokeStyle	  : 'solid'
+  }
+  var scopeOpt    = {
+    strokeColor   : 'green',
+    fillColor     : 'green',
+    strokeWeight  : 1,
+    strokeOpacity : 0.2,
+    fillOpacity	  : 0.2,
+    strokeStyle	  : 'solid'
+  }
+
   map.disableDragging()
   map.centerAndZoom(new BMap.Point(120.128258, 30.265389), 17)
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
-      longitude = position.coords.longitude
-      latitude  = position.coords.latitude
-      var pos = new BMap.Point(longitude, latitude)
-      map.centerAndZoom(pos, 17)
-      var marker = new BMap.Marker(pos)
-      map.addOverlay(marker)
+      var longitude = position.coords.longitude
+      var latitude  = position.coords.latitude
+      var pos       = new BMap.Point(longitude, latitude)
+      var centroid  = new BMap.Circle(pos, 3, centroidOpt)
+      var scope     = new BMap.Circle(pos, 20, scopeOpt)
+
+      map.centerAndZoom(pos, 18)
+      map.addOverlay(scope)
+      map.addOverlay(centroid)
+      console.log(pos);
     })
   } else {
     console.log('Failed to get location')

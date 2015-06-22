@@ -18,16 +18,16 @@ var server = http.createServer(function(request, response) {
       request.on('end', function() {
         post = query.parse(post)
         console.log(post)
-        
+
         /**************************/
         /* Handle the signin event */
         /**************************/
         var uname  = post.uname
         var passwd = post.passwd
-        
-        db = mongojs('soap:5102paoS@localhost:27017/infecteddb', ['users', 'profiles'])
+
+        db = mongojs('mongodb://soap:5102paoS@45.62.113.134:27017/infecteddb', ['users', 'profiles'])
         db.users.findOne({uname : uname}, function(err, doc) {
-        
+
           /*******************/
           /* If error occurs */
           /*******************/
@@ -37,7 +37,7 @@ var server = http.createServer(function(request, response) {
             response.end()
             console.log(err.toString())
           }
-        
+
           /****************************************/
           /* User not exists, register a new user */
           /****************************************/
@@ -57,7 +57,7 @@ var server = http.createServer(function(request, response) {
               }
             })
           }
-          
+
           /************************************/
           /* User exists, verify the password */
           /************************************/
@@ -75,7 +75,7 @@ var server = http.createServer(function(request, response) {
             }
           }
         })
-        
+
       })
     }
   } else {
@@ -84,7 +84,7 @@ var server = http.createServer(function(request, response) {
       filepath = './public/index.html'
     else
       filepath = './public' + request.url
-    
+
     fs.readFile(filepath, 'binary', function(err, file) {
       if (err) {
         response.writeHead(500, {'Content-Type' : 'text/plain; charset=utf-8'});
