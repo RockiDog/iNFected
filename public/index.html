@@ -43,47 +43,87 @@
 </html>
 
 <script>
+  var sporeOptions = {
+    mySpores    : {
+      centroid : {
+        strokeColor   : 'green',
+        fillColor     : 'green',
+        strokeWeight  : 1,
+        strokeOpacity : 1,
+        fillOpacity	  : 1,
+        strokeStyle	  : 'solid'
+      },
+      outer    : {
+        strokeColor   : 'green',
+        fillColor     : 'green',
+        strokeWeight  : 1,
+        strokeOpacity : 0.2,
+        fillOpacity	  : 0.2,
+        strokeStyle	  : 'solid'
+      }
+    },
+    otherSpores : {
+      centroid : {
+        strokeColor   : 'green',
+        fillColor     : 'green',
+        strokeWeight  : 1,
+        strokeOpacity : 1,
+        fillOpacity	  : 1,
+        strokeStyle	  : 'solid'
+      },
+      outer    : {
+        strokeColor   : 'green',
+        fillColor     : 'green',
+        strokeWeight  : 1,
+        strokeOpacity : 0.2,
+        fillOpacity	  : 0.2,
+        strokeStyle	  : 'solid'
+      }
+    }
+  }
+
+  var online = false
+  var client = null
+  var myPosMarker    = null
+  var myOuterMarker  = null
+
+  /* Synchronize the loaction with the server */
   var map = new BMap.Map('i-map')
-  var root
-  var myspores    = []
-  var otherspores = []
-
-  var centroidOpt = {
-    strokeColor   : 'green',
-    fillColor     : 'green',
-    strokeWeight  : 1,
-    strokeOpacity : 1,
-    fillOpacity	  : 1,
-    strokeStyle	  : 'solid'
-  }
-  var scopeOpt    = {
-    strokeColor   : 'green',
-    fillColor     : 'green',
-    strokeWeight  : 1,
-    strokeOpacity : 0.2,
-    fillOpacity	  : 0.2,
-    strokeStyle	  : 'solid'
-  }
-
   map.disableDragging()
-  map.centerAndZoom(new BMap.Point(120.128258, 30.265389), 17)
+  map.centerAndZoom(new BMap.Point(120.128258, 30.265389), 18)
   if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      var longitude = position.coords.longitude
-      var latitude  = position.coords.latitude
-      var pos       = new BMap.Point(longitude, latitude)
-      var centroid  = new BMap.Circle(pos, 3, centroidOpt)
-      var scope     = new BMap.Circle(pos, 20, scopeOpt)
+    navigator.geolocation.watchPosition(function(position) {
+      var lgt      = position.coords.longitude
+      var lat      = position.coords.latitude
+      var pos      = new BMap.Point(lgt, lat)
+      var centroid = new BMap.Circle(pos, 3, sporeOptions.mySpores.centroid)
+      var outer    = new BMap.Circle(pos, 50, sporeOptions.mySpores.outer)
+      map.panTo(pos)
 
-      map.centerAndZoom(pos, 18)
-      map.addOverlay(scope)
+      if (myPosMarker != null) {
+        map.removeOverlay(myPosMarker)
+        myPosMarker.dispose()
+      }
+      if (myOuterMarker != null) {
+        map.removeOverlay(myOuterMarker)
+        myOuterMarker.dispose()
+      }
+      map.addOverlay(outer)
       map.addOverlay(centroid)
-      console.log(pos);
+      myPosMarker = cenroid
+      myOuterMarker = outer
+
+      if (online)
+        client.syncPos(pos)
     })
   } else {
     console.log('Failed to get location')
   }
 
+  /* TODO Draw the spores */
+  var sporeMarkers = []
+
+  /* Sign in&up logic */
   $(document).ready(function() {
     $('.form-signin').submit(function(event) {
       event.preventDefault()
@@ -98,10 +138,13 @@
           case (-2):
             break;
           case (1):
-          case (2):
+          case (2): {
+            client = new Client(io.connect())
+            client.start()
+            online = true;
             $('#signin-container').remove()
             map.enableDragging();
-            break;
+          } break;
         }
         console.log(response)
       })

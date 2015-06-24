@@ -1,13 +1,20 @@
-var Client = function(socket, callback) {
+var Client = function(socket) {
   this.socket = socket
+  this.mySpores = []
+  this.otherSpores = []
 }
 
-Client.prototype.signin = function(uname, passwd) {
-  this.socket.emit('signin', {uname : uname, passwd : passwd})
-  console.log('emit signin')
+Client.prototype.syncPos(position) {
+  socket.emit('position', position)
+  this.position = position
 }
 
-Client.prototype.on = function(signal, callback) {
-  this.socket.on(signal, callback)
-  console.log('set on ' + signal + ' callback')
+Client.prototype.start() {
+  var client = this
+
+  /* Update the spores */
+  this.socket.on('spores', function(spores) {
+    client.mySpores    = spores['mySpores']
+    client.otherSpores = spores['otherSpores']
+  })
 }
