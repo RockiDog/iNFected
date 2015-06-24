@@ -1,25 +1,24 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <meta http-equiv='Content-Type' content='text/html; charset=utf-8'></meta>
-  <meta name='viewport' content='initial-scale=1.0, user-scalable=no'></meta>
-  <title>iNFected感染</title>
 
+<meta http-equiv='Content-Type' content='text/html; charset=utf-8'></meta>
+<meta name='viewport' content='initial-scale=1.0, user-scalable=no'></meta>
+<title>iNFected感染</title>
 
-  <style type='text/css'>
-    body, html, #i-map {width: 100%; height: 100%; overflow: hidden; margin: 0;}
-    #signin-container {top: 30px; left: 0; right: 0; bottom: 0; position: absolute; z-index: 999;}
-  </style>
-  <link href='/stylesheets/signin.css' rel='stylesheet'></link>
-  <link href='http://apps.bdimg.com/libs/bootstrap/3.3.0/css/bootstrap.min.css' rel='stylesheet'></link>
+<style type='text/css'>
+  body, html, #i-map {width: 100%; height: 100%; overflow: hidden; margin: 0;}
+  #signin-container {top: 30px; left: 0; right: 0; bottom: 0; position: absolute; z-index: 999;}
+</style>
 
-  <script src='/javascripts/client.js'></script>
-  <script src='/javascripts/jquery.md5.js'></script>
-  <script src='/socket.io/socket.io.js'></script>
+<link href='/stylesheets/signin.css' rel='stylesheet'></link>
+<script src='/javascripts/jquery.md5.js'></script>
 
-  <script src='http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js'></script>
-  <script src='http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js'></script>
-  <script src='http://api.map.baidu.com/api?v=1.5&ak=Lfs5mwH9v92NhZt83gHAzAwR'></script>
+<link href='http://apps.bdimg.com/libs/bootstrap/3.3.0/css/bootstrap.min.css' rel='stylesheet'></link>
+<script src='http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js'></script>
+<script src='http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js'></script>
+<script src='http://api.map.baidu.com/api?v=1.5&ak=Lfs5mwH9v92NhZt83gHAzAwR'></script>
+
 </head>
 
 <body>
@@ -42,112 +41,5 @@
 </body>
 </html>
 
-<script>
-  var sporeOptions = {
-    mySpores    : {
-      centroid : {
-        strokeColor   : 'green',
-        fillColor     : 'green',
-        strokeWeight  : 1,
-        strokeOpacity : 1,
-        fillOpacity	  : 1,
-        strokeStyle	  : 'solid'
-      },
-      outer    : {
-        strokeColor   : 'green',
-        fillColor     : 'green',
-        strokeWeight  : 1,
-        strokeOpacity : 0.2,
-        fillOpacity	  : 0.2,
-        strokeStyle	  : 'solid'
-      }
-    },
-    otherSpores : {
-      centroid : {
-        strokeColor   : 'green',
-        fillColor     : 'green',
-        strokeWeight  : 1,
-        strokeOpacity : 1,
-        fillOpacity	  : 1,
-        strokeStyle	  : 'solid'
-      },
-      outer    : {
-        strokeColor   : 'green',
-        fillColor     : 'green',
-        strokeWeight  : 1,
-        strokeOpacity : 0.2,
-        fillOpacity	  : 0.2,
-        strokeStyle	  : 'solid'
-      }
-    }
-  }
-
-  var online = false
-  var client = null
-  var myPosMarker    = null
-  var myOuterMarker  = null
-
-  /* Synchronize the loaction with the server */
-  var map = new BMap.Map('i-map')
-  map.disableDragging()
-  map.centerAndZoom(new BMap.Point(120.128258, 30.265389), 18)
-  if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(function(position) {
-      var lgt      = position.coords.longitude
-      var lat      = position.coords.latitude
-      var pos      = new BMap.Point(lgt, lat)
-      var centroid = new BMap.Circle(pos, 3, sporeOptions.mySpores.centroid)
-      var outer    = new BMap.Circle(pos, 50, sporeOptions.mySpores.outer)
-      map.panTo(pos)
-
-      if (myPosMarker != null) {
-        map.removeOverlay(myPosMarker)
-        myPosMarker.dispose()
-      }
-      if (myOuterMarker != null) {
-        map.removeOverlay(myOuterMarker)
-        myOuterMarker.dispose()
-      }
-      map.addOverlay(outer)
-      map.addOverlay(centroid)
-      myPosMarker = cenroid
-      myOuterMarker = outer
-
-      if (online)
-        client.syncPos(pos)
-    })
-  } else {
-    console.log('Failed to get location')
-  }
-
-  /* TODO Draw the spores */
-  var sporeMarkers = []
-
-  /* Sign in&up logic */
-  $(document).ready(function() {
-    $('.form-signin').submit(function(event) {
-      event.preventDefault()
-      var uname  = $('#input-uname').val()
-      var passwd = $('#input-passwd').val()
-      var hashedPasswd = md5(passwd)
-      console.log(uname + ' ' + passwd)
-      $.post('/signin', {uname : uname, passwd : hashedPasswd}, function(response) {
-        switch (response.ack) {
-          case (0):
-          case (-1):
-          case (-2):
-            break;
-          case (1):
-          case (2): {
-            client = new Client(io.connect())
-            client.start()
-            online = true;
-            $('#signin-container').remove()
-            map.enableDragging();
-          } break;
-        }
-        console.log(response)
-      })
-    })
-  })
-</script>
+<script src='/socket.io/socket.io.js'></script>
+<script src='/javascripts/client.js'></script>
