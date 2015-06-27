@@ -40,7 +40,7 @@ var sporeOptions = {
 var online = false
 var client = null
 var socket = null
-var myName  = new String
+var myName            = new String
 var myPosition        = null
 var myCentroidMarker  = null
 var myOuterMarker     = null
@@ -52,21 +52,23 @@ map.disableDragging()
 map.centerAndZoom(new BMap.Point(120.128258, 30.265389), 19)
 
 /* Some callbacks */
+var first = true
 function onPositionChanged(position) {
   var lng      = position.coords.longitude
   var lat      = position.coords.latitude
   var pos      = new BMap.Point(lng, lat)
   var centroid = new BMap.Circle(pos, 3, sporeOptions.mySpores.centroid)
   var outer    = new BMap.Circle(pos, 50, sporeOptions.mySpores.outer)
-  map.panTo(pos)
+  if (first) {
+    map.panTo(pos)
+    first = false
+  }
 
   if (myCentroidMarker != null) {
     map.removeOverlay(myCentroidMarker)
-    myCentroidMarker.dispose()
   }
   if (myOuterMarker != null) {
     map.removeOverlay(myOuterMarker)
-    myOuterMarker.dispose()
   }
   map.addOverlay(outer)
   map.addOverlay(centroid)
@@ -221,7 +223,25 @@ $(document).ready(function() {
         case -1:
         case -2:
         break;
-        case 1:
+        case 1: {
+          $('#signin-container').remove()
+          map.enableDragging();
+          myName = uname
+          online = true
+          socket = io.connect()
+            .on('addspores', onAddSpores)
+            .on('removespores', onRemoveSpores)
+            .on('updatespores', onUpdateSpores)
+            .on('mergespores', onMergeSpores)
+          
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+              socket.emit('signup', {uname : myName, pos : position})
+            })
+          } else {
+            console.log('Failed to get location')
+          }
+        } break;
         case 2: {
           $('#signin-container').remove()
           map.enableDragging();
@@ -231,7 +251,8 @@ $(document).ready(function() {
             .on('addspores', onAddSpores)
             .on('removespores', onRemoveSpores)
             .on('updatespores', onUpdateSpores)
-            .emit('user', uname)
+            .on('mergespores', onMergeSpores)
+            .emit('signin', uname)
         } break;
       }
       console.log(response)

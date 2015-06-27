@@ -24,7 +24,7 @@ var server = http.createServer(function(request, response) {
         var uname  = post.uname
         var passwd = post.passwd
 
-        db = mongojs('mongodb://soap:5102paoS@45.62.113.134:27017/infecteddb', ['users', 'profiles'])
+        db = mongojs('mongodb://soap:5102paoS@45.62.113.134:27017/infecteddb', ['users'])
         db.users.findOne({uname : uname}, function(err, doc) {
 
           /*******************/
@@ -96,7 +96,6 @@ var server = http.createServer(function(request, response) {
 })
 
 server.listen(7001, function() {
-  this.db = db
   var game_server = require('./lib/game_server.js').listen(this)
   console.log('Server running at http://127.0.0.1:7001')
 })
