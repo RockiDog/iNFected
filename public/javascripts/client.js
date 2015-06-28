@@ -49,7 +49,9 @@ var otherSporeMarkers = new Object
 
 var map = new BMap.Map('i-map')
 map.disableDragging()
-map.centerAndZoom(new BMap.Point(120.128258, 30.265389), 19)
+map.centerAndZoom(new BMap.Point(120.128258, 30.265389), 18)
+map.setMapStyle({style : 'midnight'})
+map.setDefaultCursor('crosshair')
 
 /* Some callbacks */
 var first = true
@@ -82,7 +84,8 @@ function onPositionChanged(position) {
 }
 
 function onAddSpores(spores) {
-  for (var spore in spores.all) {
+  for (var i in spores.all) {
+    var spore = spores.all[i]
     var id  = spore.id
     var lng = spore.lng
     var lat = spore.lat
@@ -107,7 +110,8 @@ function onAddSpores(spores) {
 }
 
 function onRemoveSpores(spores) {
-  for (var spore in spores.all) {
+  for (var i in spores.all) {
+    var spore  = spores.all[i]
     var id     = spore.id
     var marker = null
     if (spores.owner == myName)
@@ -120,7 +124,8 @@ function onRemoveSpores(spores) {
 }
 
 function onUpdateSpores(spores) {
-  for (var spore in spores.all) {
+  for (var i in spores.all) {
+    var spore = spores.all[i]
     var marker = null
     if (spores.owner == myName)
       marker = mySporeMarkers[id]
@@ -138,7 +143,8 @@ function onUpdateSpores(spores) {
 
 function onMergeSpores(spores) {
   if (spores.owner == myName) {
-    for (var spore in spores.all) {
+    for (var i in spores.all) {
+      var spore = spores.all[i]
       var id = spore.id
       
       /* Create new marker if not exists */
@@ -168,7 +174,8 @@ function onMergeSpores(spores) {
         delete mySporeMarkers[id]
     }
   } else {
-    for (var spore in spores.all) {
+    for (var i in spores.all) {
+      var spore = spores.all[i]
       var id = spore.id
       
       /* Create new marker if not exists */
@@ -203,6 +210,58 @@ function onMergeSpores(spores) {
   }
 }
 
+function onSporeClicked() {
+}
+
+var longPressed = false
+function onMapLongPressed(event) {
+  if (longPressed == true)
+    return
+  longPressed = true
+
+  var position = event.point
+  var point = map.pointToPixel(position)
+  var width = 50
+
+  $('body').append("<div id='progress-bar'></div>")
+  $('#progress-bar').css('width', width + 'px')
+    .css('left', point.x - width / 2 + 'px')
+    .css('top', point.y - width + 'px')
+    .css('right', 0)
+    .css('bottom', 0)
+
+  if (online) {
+    var startColor = '#FC5B3F'
+    var endColor   = '#6FD57F'
+    var circle     = new ProgressBar.Circle('#progress-bar', {
+      color       : startColor,
+      trailColor  : '#eee',
+      trailWidth  : 1,
+      duration    : 1000,
+      strokeWidth : 20,
+      step        : function(state, circle) {
+        circle.path.setAttribute('stroke', state.color)
+        circle.path.setAttribute('stroke-width', state.width)
+      }
+    })
+    
+    circle.animate(1.0, {
+        from : {color : startColor, width : 1},
+        to   : {color : endColor, width : 20}
+      }, function() {
+        $('#progress-bar').fadeOut('1000')
+        setTimeout(function() {
+          $('#progress-bar').remove()
+          longPressed = false
+        }, 200)
+        socket.emit('addspore', position)
+      })
+  } else {
+    console.log('you are offine')
+    longPressed = false
+  }
+}
+
 /* Synchronize the loaction with the server */
 if (navigator.geolocation)
   navigator.geolocation.watchPosition(onPositionChanged)
@@ -221,11 +280,13 @@ $(document).ready(function() {
       switch (response.ack) {
         case 0:
         case -1:
-        case -2:
-        break;
+        case -2: break;
         case 1: {
           $('#signin-container').remove()
           map.enableDragging();
+          map.addEventListener('rightclick', onMapLongPressed)
+          map.addEventListener('longpress', onMapLongPressed)
+          
           myName = uname
           online = true
           socket = io.connect()
@@ -245,6 +306,9 @@ $(document).ready(function() {
         case 2: {
           $('#signin-container').remove()
           map.enableDragging();
+          map.addEventListener("rightclick", onMapLongPressed)
+          map.addEventListener('longpress', onMapLongPressed)
+          
           myName = uname
           online = true
           socket = io.connect()

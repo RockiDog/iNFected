@@ -21,14 +21,14 @@
     killed   : integer,
     dead     : boolean,
     online   : boolean,
-    position : { x : double, y : double },
-    root     : { x : double, y : double },
+    position : { lat : double, lng : double },
+    root     : { lat : double, lng : double },
     spore    : [
-      { x : double, y : double},
-      { x : double, y : double},
-      { x : double, y : double},
-      { x : double, y : double},
-      { x : double, y : double}
+      { lat : double, lng : double, radius : integer},
+      { lat : double, lng : double, radius : integer},
+      { lat : double, lng : double, radius : integer},
+      { lat : double, lng : double, radius : integer},
+      { lat : double, lng : double, radius : integer}
     ]
   }
 ```

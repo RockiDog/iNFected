@@ -24,7 +24,7 @@ var server = http.createServer(function(request, response) {
         var uname  = post.uname
         var passwd = post.passwd
 
-        db = mongojs('mongodb://soap:5102paoS@45.62.113.134:27017/infecteddb', ['users'])
+        db = mongojs('mongodb://soap:5102paoS@localhost:27017/infecteddb', ['users'])
         db.users.findOne({uname : uname}, function(err, doc) {
 
           /*******************/
@@ -72,7 +72,6 @@ var server = http.createServer(function(request, response) {
             }
           }
         })
-
       })
     }
   } else {
