@@ -3,7 +3,7 @@ var sporeOptions = {
     centroid : {
       strokeColor   : 'green',
       fillColor     : 'green',
-      strokeWeight  : 1,
+      strokeWeight  : 2,
       strokeOpacity : 1,
       fillOpacity	  : 1,
       strokeStyle	  : 'solid'
@@ -11,7 +11,7 @@ var sporeOptions = {
     outer    : {
       strokeColor   : 'green',
       fillColor     : 'green',
-      strokeWeight  : 1,
+      strokeWeight  : 2,
       strokeOpacity : 0.2,
       fillOpacity	  : 0.2,
       strokeStyle	  : 'solid'
@@ -21,7 +21,7 @@ var sporeOptions = {
     centroid : {
       strokeColor   : 'pink',
       fillColor     : 'pink',
-      strokeWeight  : 1,
+      strokeWeight  : 2,
       strokeOpacity : 1,
       fillOpacity	  : 1,
       strokeStyle	  : 'solid'
@@ -29,7 +29,7 @@ var sporeOptions = {
     outer    : {
       strokeColor   : 'pink',
       fillColor     : 'pink',
-      strokeWeight  : 1,
+      strokeWeight  : 2,
       strokeOpacity : 0.2,
       fillOpacity	  : 0.2,
       strokeStyle	  : 'solid'
@@ -142,10 +142,15 @@ function onUpdateSpores(spores) {
 }
 
 function onMergeSpores(spores) {
+  console.log(spores)
   if (spores.owner == myName) {
     for (var i in spores.all) {
-      var spore = spores.all[i]
-      var id = spore.id
+      var spore  = spores.all[i]
+      var id     = spore.id
+      var lat    = spore.lat
+      var lng    = spore.lng
+      var radius = spore.radius
+      var pos    = new BMap.Point(lng, lat)
       
       /* Create new marker if not exists */
       if (mySporeMarkers[id] == undefined) {
@@ -159,19 +164,20 @@ function onMergeSpores(spores) {
       /* Update if exists */
       else {
         var marker = mySporeMarkers[id]
-        var lng    = spore.lng
-        var lat    = spore.lat
-        var radius = spore.radius
-        marker.centroid.setCenter(lng, lat)
-        marker.outer.setCenter(lng, lat)
+        marker.centroid.setCenter(pos)
+        marker.outer.setCenter(pos)
         marker.outer.setRadius(radius)
       }
     }
     
     /* Remove redundant markers */
     for (var id in mySporeMarkers) {
-      if (spores.all[id] == undefined)
+      if (spores.all[Number(id)] == undefined) {
+        var marker = mySporeMarkers[id]
+        map.removeOverlay(marker.cetroid)
+        map.removeOverlay(marker.outer)
         delete mySporeMarkers[id]
+      }
     }
   } else {
     for (var i in spores.all) {
@@ -179,7 +185,8 @@ function onMergeSpores(spores) {
       var id = spore.id
       
       /* Create new marker if not exists */
-      if (otherSporeMarkers[spores.owner][id] == undefined) {
+      if (otherSporesMarkers[spores.owner] == undefined
+          || otherSporeMarkers[spores.owner][id] == undefined) {
         var centroid = new BMap.Circle(pos, 3, sporeOptions.otherSpores.centroid)
         var outer    = new BMap.Circle(pos, radius, sporeOptions.otherSpores.outer)
         map.addOverlay(outer)
@@ -204,7 +211,10 @@ function onMergeSpores(spores) {
     
     /* Remove redundant markers */
     for (var id in otherSporeMarkers[spores.owner]) {
-      if (spores.all[id] == undefined)
+      if (spores.all[Number(id)] == undefined)
+        var marker = otherSporeMarkers[spores.owner][id]
+        map.removeOverlay(marker.cetroid)
+        map.removeOverlay(marker.outer)
         delete otherSporeMarkers[spores.owner][id]
     }
   }
