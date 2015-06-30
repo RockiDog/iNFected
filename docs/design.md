@@ -23,7 +23,7 @@
     online   : boolean,
     position : { lat : double, lng : double },
     root     : { lat : double, lng : double },
-    spore    : [
+    spores   : [
       { lat : double, lng : double, radius : integer},
       { lat : double, lng : double, radius : integer},
       { lat : double, lng : double, radius : integer},
