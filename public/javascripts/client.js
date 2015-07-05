@@ -68,10 +68,31 @@ var otherSporeMarkers = new Object
 var map = new BMap.Map('i-map')
 map.disableDragging()
 map.centerAndZoom(new BMap.Point(120.128258, 30.265389), 18)
-//map.setMapStyle({style : 'midnight'})
-map.setDefaultCursor('crosshair')
+map.setMapStyle({style : 'midnight'})
+map.setDefaultCursor('default')
 
 /* Some callbacks */
+function onTopKReceived(topK) {
+  var k = topK.length
+  var info = new String
+  var maxLen = 0
+  for (var i in topK) {
+    var player = topK[i]
+    if (player.name.length > maxLen)
+      maxLen = player.name.length
+    info += '<p>' + player.name + '&emsp;' + player.killed + '</p>'
+  }
+  var width = 150
+  var height = 100 + k * 30
+  var option = {
+    width  : width,
+    height : height,
+    title  : '<center><h3>排行榜</h3></center>'
+  }
+  var infoWindow = new BMap.InfoWindow(info, option);
+  map.openInfoWindow(infoWindow, map.pixelToPoint(new BMap.Pixel(150, height + 100)))
+}
+
 function onSporePressed(event, owner, id) {
   if (online) {
     console.log(owner + ' ' + id)
@@ -131,33 +152,16 @@ function onSporePressed(event, owner, id) {
       }
     }, 20)
   } else {
-    console.log('you are offine')
+    console.log('You are offine')
   }
 }
 
-var first = true
 function onPositionChanged(position) {
   var lng      = position.coords.longitude
   var lat      = position.coords.latitude
   myPosition   = new BMap.Point(lng, lat)
-
-  if (first) {
-    map.panTo(myPosition)
-    first = false
-  }
-
-  if (myOuterMarker == null || myCentroidMarker == null) {
-    var outer    = new BMap.Circle(myPosition, 100, sporeOptions.root.outer)
-    var centroid = new BMap.Circle(myPosition, 3, sporeOptions.root.centroid)
-    map.addOverlay(outer)
-    map.addOverlay(centroid)
-    myOuterMarker    = outer
-    myCentroidMarker = centroid
-  } else {
-    myOuterMarker.setCenter(myPosition)
-    myCentroidMarker.setCenter(myPosition)
-  }
-
+  myOuterMarker.setCenter(myPosition)
+  myCentroidMarker.setCenter(myPosition)
   if (online)
     socket.emit('position', myPosition)
 }
@@ -207,6 +211,10 @@ function onRemoveSpores(spores) {
       marker = otherSporeMarkers[spores.owner][id]
     map.removeOverlay(marker.centroid)
     map.removeOverlay(marker.outer)
+    if (spores.owner == myName)
+      delete mySporeMarkers[id]
+    else
+      delete otherSporeMarkers[spores.owner][id]
   }
 }
 
@@ -244,7 +252,6 @@ function onMergeSpores(spores) {
         var centroid = new BMap.Circle(pos, 3, sporeOptions.mySpores.centroid)
         centroid.id = id
         centroid.addEventListener('mousedown', function(event) {
-          console.log(this.id)
           onSporePressed(event, spores.owner, this.id)
         })
         map.addOverlay(outer)
@@ -262,6 +269,7 @@ function onMergeSpores(spores) {
     }
     
     /* Remove redundant markers */
+    /*
     for (var id in mySporeMarkers) {
       if (spores.all[id] == undefined) {
         var marker = mySporeMarkers[id]
@@ -270,7 +278,10 @@ function onMergeSpores(spores) {
         delete mySporeMarkers[id]
       }
     }
+    */
   } else {
+    if (otherSporeMarkers[spores.owner] == undefined)
+      otherSporeMarkers[spores.owner] = new Array
     for (var i in spores.all) {
       var spore  = spores.all[i]
       var id     = spore.id
@@ -280,8 +291,7 @@ function onMergeSpores(spores) {
       var pos    = new BMap.Point(lng, lat)
       
       /* Create new marker if not exists */
-      if (otherSporesMarkers[spores.owner] == undefined
-          || otherSporeMarkers[spores.owner][id] == undefined) {
+      if (otherSporeMarkers[spores.owner][id] == undefined) {
         var outer    = new BMap.Circle(pos, radius, sporeOptions.otherSpores.outer)
         var centroid = new BMap.Circle(pos, 3, sporeOptions.otherSpores.centroid)
         centroid.id = id
@@ -290,8 +300,6 @@ function onMergeSpores(spores) {
         })
         map.addOverlay(outer)
         map.addOverlay(centroid)
-        if (otherSporeMarkers[spores.owner] == undefined)
-          otherSporeMarkers[spores.owner] = new Array
         otherSporeMarkers[spores.owner][id] = {'centroid' : centroid, 'outer' : outer}
       }
       
@@ -305,13 +313,16 @@ function onMergeSpores(spores) {
     }
     
     /* Remove redundant markers */
+    /*
     for (var id in otherSporeMarkers[spores.owner]) {
-      if (spores.all[id] == undefined)
+      if (spores.all[id] == undefined) {
         var marker = otherSporeMarkers[spores.owner][id]
         map.removeOverlay(marker.cetroid)
         map.removeOverlay(marker.outer)
         delete otherSporeMarkers[spores.owner][id]
+      }
     }
+    */
   }
 }
 
@@ -351,24 +362,18 @@ function onMapLongPressed(event) {
         from : {color : startColor, width : 1},
         to   : {color : endColor, width : 20}
       }, function() {
+        longPressed = false
         $('#progress-bar').fadeOut('1000')
         setTimeout(function() {
           $('#progress-bar').remove()
-          longPressed = false
         }, 200)
         socket.emit('addspore', position)
       })
   } else {
-    console.log('you are offine')
+    console.log('You are offine')
     longPressed = false
   }
 }
-
-/* Synchronize the loaction with the server */
-if (navigator.geolocation)
-  navigator.geolocation.watchPosition(onPositionChanged)
-else
-  console.log('Failed to get location')
 
 /* Sign in&up logic */
 $(document).ready(function() {
@@ -396,11 +401,22 @@ $(document).ready(function() {
             .on('removespores', onRemoveSpores)
             .on('updatespores', onUpdateSpores)
             .on('mergespores', onMergeSpores)
+            .on('top-k', onTopKReceived)
           
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
               myPosition = new BMap.Point(position.coords.longitude, position.coords.latitude)
+              map.panTo(myPosition)
               socket.emit('signup', {uname : myName, pos : myPosition})
+              var outer    = new BMap.Circle(myPosition, 100, sporeOptions.root.outer)
+              var centroid = new BMap.Circle(myPosition, 3, sporeOptions.root.centroid)
+              map.addOverlay(outer)
+              map.addOverlay(centroid)
+              myOuterMarker    = outer
+              myCentroidMarker = centroid
+              
+              /* Synchronize the loaction with the server */
+              navigator.geolocation.watchPosition(onPositionChanged)
             })
           } else {
             console.log('Failed to get location')
@@ -419,7 +435,26 @@ $(document).ready(function() {
             .on('removespores', onRemoveSpores)
             .on('updatespores', onUpdateSpores)
             .on('mergespores', onMergeSpores)
+            .on('top-k', onTopKReceived)
             .emit('signin', uname)
+          
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+              myPosition = new BMap.Point(position.coords.longitude, position.coords.latitude)
+              map.panTo(myPosition)
+              var outer    = new BMap.Circle(myPosition, 100, sporeOptions.root.outer)
+              var centroid = new BMap.Circle(myPosition, 3, sporeOptions.root.centroid)
+              map.addOverlay(outer)
+              map.addOverlay(centroid)
+              myOuterMarker    = outer
+              myCentroidMarker = centroid
+              
+              /* Synchronize the loaction with the server */
+              navigator.geolocation.watchPosition(onPositionChanged)
+            })
+          } else {
+            console.log('Failed to get location')
+          }
         } break;
       }
       console.log(response)
