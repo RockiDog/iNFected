@@ -102,8 +102,8 @@ function onSporePressed(event, owner, id) {
       pressed = false
     })
     
-    var pixel    = event.pixel
-    var width    = 50
+    var pixel = event.pixel
+    var width = 50
     
     $('body').append("<div id='progress-bar'></div>")
     $('#progress-bar').css('width', width + 'px')
@@ -237,6 +237,8 @@ function onUpdateSpores(spores) {
 }
 
 function onMergeSpores(spores) {
+
+  /* My spores */
   if (spores.owner == myName) {
     for (var i in spores.all) {
       var spore  = spores.all[i]
@@ -279,6 +281,7 @@ function onMergeSpores(spores) {
       }
     }
     */
+  /* Other's spores */
   } else {
     if (otherSporeMarkers[spores.owner] == undefined)
       otherSporeMarkers[spores.owner] = new Array
@@ -384,78 +387,112 @@ $(document).ready(function() {
     var hashedPasswd = md5(passwd)
     console.log(uname + ' ' + passwd)
     $.post('/signin', {uname : uname, passwd : hashedPasswd}, function(response) {
-      switch (response.ack) {
-        case 0:
-        case -1:
-        case -2: break;
-        case 1: {
-          $('#signin-container').remove()
-          map.enableDragging();
-          map.addEventListener('rightclick', onMapLongPressed)
-          map.addEventListener('longpress', onMapLongPressed)
-          
-          myName = uname
-          online = true
-          socket = io.connect()
-            .on('addspores', onAddSpores)
-            .on('removespores', onRemoveSpores)
-            .on('updatespores', onUpdateSpores)
-            .on('mergespores', onMergeSpores)
-            .on('top-k', onTopKReceived)
-          
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-              myPosition = new BMap.Point(position.coords.longitude, position.coords.latitude)
-              map.panTo(myPosition)
-              socket.emit('signup', {uname : myName, pos : myPosition})
-              var outer    = new BMap.Circle(myPosition, 100, sporeOptions.root.outer)
-              var centroid = new BMap.Circle(myPosition, 3, sporeOptions.root.centroid)
-              map.addOverlay(outer)
-              map.addOverlay(centroid)
-              myOuterMarker    = outer
-              myCentroidMarker = centroid
-              
-              /* Synchronize the loaction with the server */
-              navigator.geolocation.watchPosition(onPositionChanged)
-            })
-          } else {
-            console.log('Failed to get location')
-          }
-        } break;
-        case 2: {
-          $('#signin-container').remove()
-          map.enableDragging();
-          map.addEventListener("rightclick", onMapLongPressed)
-          map.addEventListener('longpress', onMapLongPressed)
-          
-          myName = uname
-          online = true
-          socket = io.connect()
-            .on('addspores', onAddSpores)
-            .on('removespores', onRemoveSpores)
-            .on('updatespores', onUpdateSpores)
-            .on('mergespores', onMergeSpores)
-            .on('top-k', onTopKReceived)
-            .emit('signin', uname)
-          
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-              myPosition = new BMap.Point(position.coords.longitude, position.coords.latitude)
-              map.panTo(myPosition)
-              var outer    = new BMap.Circle(myPosition, 100, sporeOptions.root.outer)
-              var centroid = new BMap.Circle(myPosition, 3, sporeOptions.root.centroid)
-              map.addOverlay(outer)
-              map.addOverlay(centroid)
-              myOuterMarker    = outer
-              myCentroidMarker = centroid
-              
-              /* Synchronize the loaction with the server */
-              navigator.geolocation.watchPosition(onPositionChanged)
-            })
-          } else {
-            console.log('Failed to get location')
-          }
-        } break;
+//      switch (response.ack) {
+//        case 0:
+//        case -1:
+//        case -2: break;
+//        case 1: {
+//          $('#signin-container').remove()
+//          map.enableDragging();
+//          map.addEventListener('rightclick', onMapLongPressed)
+//          map.addEventListener('longpress', onMapLongPressed)
+//          
+//          myName = uname
+//          online = true
+//          socket = io.connect()
+//            .on('addspores', onAddSpores)
+//            .on('removespores', onRemoveSpores)
+//            .on('updatespores', onUpdateSpores)
+//            .on('mergespores', onMergeSpores)
+//          
+//          if (navigator.geolocation) {
+//            navigator.geolocation.getCurrentPosition(function(position) {
+//              myPosition = new BMap.Point(position.coords.longitude, position.coords.latitude)
+//              map.panTo(myPosition)
+//              socket.emit('signup', {uname : myName, pos : myPosition})
+//              var outer    = new BMap.Circle(myPosition, 100, sporeOptions.root.outer)
+//              var centroid = new BMap.Circle(myPosition, 3, sporeOptions.root.centroid)
+//              map.addOverlay(outer)
+//              map.addOverlay(centroid)
+//              myOuterMarker    = outer
+//              myCentroidMarker = centroid
+//              
+//              /* Synchronize the loaction with the server */
+//              navigator.geolocation.watchPosition(onPositionChanged)
+//            })
+//          } else {
+//            console.log('Failed to get location')
+//          }
+//        } break;
+//        case 2: {
+//          $('#signin-container').remove()
+//          map.enableDragging();
+//          map.addEventListener("rightclick", onMapLongPressed)
+//          map.addEventListener('longpress', onMapLongPressed)
+//          
+//          myName = uname
+//          online = true
+//          socket = io.connect()
+//            .on('addspores', onAddSpores)
+//            .on('removespores', onRemoveSpores)
+//            .on('updatespores', onUpdateSpores)
+//            .on('mergespores', onMergeSpores)
+//            .emit('signin', uname)
+//          
+//          if (navigator.geolocation) {
+//            navigator.geolocation.getCurrentPosition(function(position) {
+//              myPosition = new BMap.Point(position.coords.longitude, position.coords.latitude)
+//              map.panTo(myPosition)
+//              var outer    = new BMap.Circle(myPosition, 100, sporeOptions.root.outer)
+//              var centroid = new BMap.Circle(myPosition, 3, sporeOptions.root.centroid)
+//              map.addOverlay(outer)
+//              map.addOverlay(centroid)
+//              myOuterMarker    = outer
+//              myCentroidMarker = centroid
+//              
+//              /* Synchronize the loaction with the server */
+//              navigator.geolocation.watchPosition(onPositionChanged)
+//            })
+//          } else {
+//            console.log('Failed to get location')
+//          }
+//        } break;
+//      }
+      if (response.ack == 1 || response.ack == 2) {
+        $('#signin-container').remove()
+        map.enableDragging();
+        map.addEventListener('rightclick', onMapLongPressed)
+        map.addEventListener('longpress', onMapLongPressed)
+        myName = uname
+        online = true
+        socket = io.connect()
+          .on('addspores', onAddSpores)
+          .on('removespores', onRemoveSpores)
+          .on('updatespores', onUpdateSpores)
+          .on('mergespores', onMergeSpores)
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            myPosition = new BMap.Point(position.coords.longitude, position.coords.latitude)
+            map.panTo(myPosition)
+            var outer    = new BMap.Circle(myPosition, 100, sporeOptions.root.outer)
+            var centroid = new BMap.Circle(myPosition, 3, sporeOptions.root.centroid)
+            map.addOverlay(outer)
+            map.addOverlay(centroid)
+            myOuterMarker    = outer
+            myCentroidMarker = centroid
+
+            /* Synchronize the loaction with the server */
+            var info = {uname : myName, pos : myPosition}
+            if (response.ack == 1)
+              socket.emit('signup', info)
+            else if (response.ack == 2)
+              socket.emit('signin', info)
+            navigator.geolocation.watchPosition(onPositionChanged)
+          }, function(error) { console.log(error) })
+        } else {
+          console.log('Failed to get location')
+        }
       }
       console.log(response)
     })

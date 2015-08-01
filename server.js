@@ -18,9 +18,9 @@ var server = http.createServer(function(request, response) {
         post = query.parse(post)
         console.log(post)
 
-        /**************************/
+        /***************************/
         /* Handle the signin event */
-        /**************************/
+        /***************************/
         var uname  = post.uname
         var passwd = post.passwd
 
